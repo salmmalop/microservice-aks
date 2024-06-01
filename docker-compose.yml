@@ -1,0 +1,105 @@
+version: '3'
+
+services:
+
+  pitstop-customer-database:
+    image: ziyadmabrouk/pitstop-database:1.0.0
+    env_file:
+      - ./pitstop-customer/.env
+    volumes:
+      - pitstop-customer-volume:/var/lib/mysql pitstop-customer-database
+    networks:
+      - pitstop-network
+    restart: on-failure
+
+  pitstop-vehicle-database:
+    image: ziyadmabrouk/pitstop-database:1.0.0
+    env_file:
+      - ./pitstop-vehicle/.env
+    volumes:
+      - pitstop-vehicle-volume:/var/lib/mysql pitstop-customer-database
+    networks:
+      - pitstop-network
+    restart: on-failure
+
+  pitstop-workshop-database:
+    image: ziyadmabrouk/pitstop-database:1.0.0
+    env_file:
+      - ./pitstop-workshop-planning/.env
+    volumes:
+      - pitstop-workshop-volume:/var/lib/mysql pitstop-customer-database
+    networks:
+      - pitstop-network
+    restart: on-failure
+
+  rabbitmq: 
+    image: rabbitmq:3-management
+    ports:
+      - "15672:15672"
+    networks:
+      - pitstop-network
+    restart: on-failure
+
+  pitstop-customer-service:
+    image: ziyadmabrouk/pitstop-customer:1.0.0
+    env_file:
+      - ./pitstop-customer/.env
+    networks:
+      - pitstop-network
+    restart: on-failure
+    depends_on:
+      - rabbitmq
+      - pitstop-customer-database
+
+  pitstop-vehicle-service:
+    image: ziyadmabrouk/pitstop-vehicle:1.0.0
+    env_file:
+      - ./pitstop-vehicle/.env
+    networks:
+      - pitstop-network
+    restart: on-failure
+    depends_on:
+      - rabbitmq
+      - pitstop-vehicle-database
+
+  pitstop-workshop-service:
+    image: ziyadmabrouk/pitstop-workshop-planning:1.0.0
+    env_file:
+      - ./pitstop-workshop-planning/.env
+    networks:
+      - pitstop-network
+    restart: on-failure
+    depends_on:
+      - rabbitmq
+      - pitstop-workshop-database
+
+  pitstop-express-gateway:
+    image: ziyadmabrouk/pitstop-express-gateway:1.0.0
+    networks:
+      - pitstop-network
+    ports:
+      - "8080:8080"
+    restart: on-failure
+    depends_on:
+      - pitstop-customer-service
+      - pitstop-vehicle-service
+      - pitstop-workshop-service
+
+  pitstop-webapp:
+    image: ziyadmabrouk/pitstop-webapp:1.0.0
+    networks:
+      - pitstop-network
+    ports:
+      - "80:8081"
+    restart: on-failure
+    depends_on:
+      - pitstop-express-gateway
+
+volumes:
+  pitstop-customer-volume:
+  pitstop-vehicle-volume:
+  pitstop-workshop-volume:
+
+networks:
+  pitstop-network:
+    driver: bridge

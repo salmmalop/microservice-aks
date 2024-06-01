@@ -97,8 +97,11 @@ services:
 
 volumes:
   pitstop-customer-volume:
+    driver: local
   pitstop-vehicle-volume:
+    driver: local
   pitstop-workshop-volume:
+    driver: local
 
 networks:
   pitstop-network:

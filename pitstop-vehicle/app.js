@@ -9,6 +9,9 @@ var vehiclesRouter = require('./routes/vehicles');
 
 var app = express();
 
+// CORS middleware for all routes
+app.use(cors());
+
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));

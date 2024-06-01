@@ -1,0 +1,3 @@
+CREATE DATABASE prod_db;
+CREATE USER prod_user IDENTIFIED BY 'prod1234567890';
+GRANT ALL PRIVILEGES ON prod_db.* TO prod_user;

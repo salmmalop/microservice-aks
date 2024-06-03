@@ -1,0 +1,24 @@
+include:
+  - local: template.yml
+
+services:
+  - docker:dind
+
+variables:
+  IMAGE_NAME: $DOCKER_USERNAME/pitstop-customer:latest
+
+stages:
+  - build
+  - test
+
+build:
+  extends: .build_job_template
+
+sonarcloud_sast_scan:
+  extends: .sonarcloud_job_template
+
+snyk_dependency_scan:
+  extends: .snyk_dependency_scan_job_template
+
+snyk_container_scan:
+  extends: .snyk_container_scan_job_template

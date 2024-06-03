@@ -1,0 +1,81 @@
+# Running on my-ubuntu-runner (using docker as executor)
+variables:
+  SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"
+  IMAGE_NAME: $DOCKER_USERNAME/pitstop-webapp:latest
+
+stages:
+  - build
+  - test
+  - deploy
+
+build:
+  image: docker:latest
+  stage: build
+  before_script:
+    - docker info
+    - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+  script:
+    # Build the Docker image using the pulled image as cache
+    - docker build -t $IMAGE_NAME .
+  tags:
+    - use-my-runner
+
+sonarcloud_sast_scan:
+  stage: test
+  image:
+    name: sonarsource/sonar-scanner-cli:latest
+    entrypoint: [""]
+  cache:
+    key: "${CI_JOB_NAME}"
+    paths:
+      - .sonar/cache
+  script:
+    - sonar-scanner
+  allow_failure: true
+  tags:
+    - use-my-runner
+
+snyk_dependency_scan:
+  image: node:latest
+  stage: test
+  before_script:
+    - npm install -g snyk
+    # Install npm, snyk, and snyk-to-html
+    - npm install -g npm@latest
+    - npm install -g snyk
+    - npm install snyk-to-html -g
+  script:
+      # Run snyk auth, snyk monitor, snyk test to break build and out report
+    - snyk auth $SNYK_TOKEN
+    - snyk monitor --project-name=$CI_PROJECT_NAME
+    - snyk test --json | snyk-to-html -o snyk_results.html
+  # Save report to artifacts
+  artifacts:
+    when: always
+    paths: 
+      - snyk_results.html
+  allow_failure: true
+  tags:
+    - use-my-runner
+
+snyk_container_scan:
+  stage: test
+  image:
+    name: snyk/snyk:docker
+    entrypoint: [""]
+  script:
+    - snyk auth $SNYK_TOKEN
+    - snyk container test $IMAGE_NAME --file=Dockerfile
+  allow_failure: true
+  tags:
+    - use-my-runner
+
+deploy:
+  stage: deploy
+  image: docker:latest
+  before_script:
+    - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+  script:
+    - docker push $IMAGE_NAME
+  tags:
+    - use-my-runner

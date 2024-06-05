@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: garage-quota
+  namespace: garage
+spec:
+  hard:
+    requests.cpu: "8"
+    requests.memory: "32Gi"
+    limits.cpu: "8"
+    limits.memory: "64Gi"

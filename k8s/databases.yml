@@ -1,0 +1,205 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-initdb-config
+  namespace: garage
+data:
+  init.sql: |
+    CREATE DATABASE dev_db;
+    CREATE USER dev_user IDENTIFIED BY 'dev1234567890';
+    GRANT ALL PRIVILEGES ON dev_db.* TO dev_user;
+    CREATE DATABASE test_db;
+    CREATE USER test_user IDENTIFIED BY 'test1234567890';
+    GRANT ALL PRIVILEGES ON test_db.* TO test_user;
+    CREATE DATABASE prod_db;
+    CREATE USER prod_user IDENTIFIED BY 'prod1234567890';
+    GRANT ALL PRIVILEGES ON prod_db.* TO prod_user;
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mysql-secret
+  namespace: garage
+type: Opaque
+data:
+  MYSQL_ROOT_PASSWORD: cGFzc3dvcmQ=
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: customer-database-statefulset
+  namespace: garage
+spec:
+  serviceName: customer-database-service
+  replicas: 1
+  selector:
+    matchLabels:
+      app: customer-database
+  template:
+    metadata:
+      labels:
+        app: customer-database
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+      - name: customer-database
+        image: mysql:5.7
+        ports:
+        - containerPort: 3306
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: MYSQL_ROOT_PASSWORD
+        volumeMounts:
+        - name: mysql-initdb
+          mountPath: /docker-entrypoint-initdb.d
+        - name: customer-persistent-storage
+          mountPath: /var/lib/mysql
+      volumes:
+      - name: mysql-initdb
+        configMap:
+          name: mysql-initdb-config
+  volumeClaimTemplates:
+  - metadata:
+      name: customer-persistent-storage
+      namespace: garage
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: customer-database-service
+  namespace: garage
+spec:
+  ports:
+  - port: 3306
+    targetPort: 3306
+    protocol: TCP
+  selector:
+    app: customer-database
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: vehicle-database-statefulset
+  namespace: garage
+spec:
+  serviceName: vehicle-database-service
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vehicle-database
+  template:
+    metadata:
+      labels:
+        app: vehicle-database
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+      - name: vehicle-database
+        image: mysql:5.7
+        ports:
+        - containerPort: 3306
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: MYSQL_ROOT_PASSWORD
+        volumeMounts:
+        - name: mysql-initdb
+          mountPath: /docker-entrypoint-initdb.d
+        - name: vehicle-persistent-storage
+          mountPath: /var/lib/mysql
+      volumes:
+      - name: mysql-initdb
+        configMap:
+          name: mysql-initdb-config
+  volumeClaimTemplates:
+  - metadata:
+      name: vehicle-persistent-storage
+      namespace: garage
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vehicle-database-service
+  namespace: garage
+spec:
+  ports:
+  - port: 3306
+    targetPort: 3306
+    protocol: TCP
+  selector:
+    app: vehicle-database
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: workshop-database-statefulset
+  namespace: garage
+spec:
+  serviceName: workshop-database-service
+  replicas: 1
+  selector:
+    matchLabels:
+      app: workshop-database
+  template:
+    metadata:
+      labels:
+        app: workshop-database
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+      - name: workshop-database
+        image: mysql:5.7
+        ports:
+        - containerPort: 3306
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: MYSQL_ROOT_PASSWORD
+        volumeMounts:
+        - name: mysql-initdb
+          mountPath: /docker-entrypoint-initdb.d
+        - name: workshop-persistent-storage
+          mountPath: /var/lib/mysql
+      volumes:
+      - name: mysql-initdb
+        configMap:
+          name: mysql-initdb-config
+  volumeClaimTemplates:
+  - metadata:
+      name: workshop-persistent-storage
+      namespace: garage
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: workshop-database-service
+  namespace: garage
+spec:
+  ports:
+  - port: 3306
+    targetPort: 3306
+    protocol: TCP
+  selector:
+    app: workshop-database

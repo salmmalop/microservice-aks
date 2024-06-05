@@ -1,0 +1,10 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: customer-budget
+  namespace: garage
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: customer

@@ -38,7 +38,7 @@ spec:
     spec:
       containers:
       - name: pitstop-customer-service
-        image: ziyadmabrouk/pitstop-customer:latest
+        image: ziyadmabrouk/pitstop-customer:for-prom
         ports:
         - containerPort: 3001
         envFrom:

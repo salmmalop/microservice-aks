@@ -4,6 +4,7 @@ ENV NODE_ENV=production
 WORKDIR /usr/src/app
 COPY package*.json ./
 RUN npm ci --only=${NODE_ENV}
+RUN npm install prom-client
 COPY . .
 
 # Stage 2: Production image

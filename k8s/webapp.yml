@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: pitstop-webapp
-        image: ziyadmabrouk/pitstop-webapp:1.0.0
+        image: acrtiukk.azurecr.io/pitstop-webapp:latest
         ports:
         - containerPort: 8081
         resources:

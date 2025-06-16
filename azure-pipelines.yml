@@ -8,7 +8,7 @@ variables:
   resourceGroup: '1-9919a87d-playground-sandbox'
   location: 'southcentralus'
   acrName: '$(acrNameFromOutput)'
-  azureServiceConnection: 'serviceConnection'
+  azureServiceConnection: 'connect'
 
 stages:
 - stage: PrepareEnvironment

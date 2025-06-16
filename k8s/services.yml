@@ -1,0 +1,74 @@
+# Customer Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: pitstop-customer-service
+  namespace: garage
+spec:
+  selector:
+    app: customer
+  ports:
+  - protocol: TCP
+    port: 3001
+    targetPort: 3001
+  type: ClusterIP
+---
+# Vehicle Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: pitstop-vehicle-service
+  namespace: garage
+spec:
+  selector:
+    app: vehicle
+  ports:
+  - protocol: TCP
+    port: 3002
+    targetPort: 3002
+  type: ClusterIP
+---
+# Workshop Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: pitstop-workshop-service
+  namespace: garage
+spec:
+  selector:
+    app: workshop
+  ports:
+  - protocol: TCP
+    port: 3003
+    targetPort: 3003
+  type: ClusterIP
+---
+# Gateway Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: gateway-service
+  namespace: garage
+spec:
+  selector:
+    app: gateway
+  ports:
+  - protocol: TCP
+    port: 8080
+    targetPort: 8080
+  type: ClusterIP
+---
+# WebApp Service with LoadBalancer for external access
+apiVersion: v1
+kind: Service
+metadata:
+  name: webapp-service
+  namespace: garage
+spec:
+  selector:
+    app: webapp
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8081
+  type: LoadBalancer

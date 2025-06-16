@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: pitstop-customer-service
-        image: ziyadmabrouk/pitstop-customer:for-prom
+        image: acrtiukk.azurecr.io/pitstop-customer:latest
         ports:
         - containerPort: 3001
         envFrom:
@@ -57,7 +57,7 @@ spec:
     spec:
       containers:
       - name: pitstop-vehicle-service
-        image: ziyadmabrouk/pitstop-vehicle:latest
+        image: acrtiukk.azurecr.io/pitstop-vehicle:latest
         ports:
         - containerPort: 3002
         envFrom:
@@ -98,7 +98,7 @@ spec:
     spec:
       containers:
       - name: pitstop-workshop-service
-        image: ziyadmabrouk/pitstop-workshop-planning:latest
+        image: acrtiukk.azurecr.io/pitstop-workshop-planning:latest
         ports:
         - containerPort: 3003
         envFrom:
@@ -139,7 +139,7 @@ spec:
     spec:
       containers:
       - name: pitstop-express-gateway
-        image: ziyadmabrouk/pitstop-express-gateway:1.0.0
+        image: acrtiukk.azurecr.io/pitstop-express-gateway:latest
         ports:
         - containerPort: 8080
         resources:

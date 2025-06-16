@@ -17,9 +17,12 @@ spec:
     spec:
       containers:
       - name: pitstop-express-gateway
-        image: ziyadmabrouk/pitstop-express-gateway:1.0.0
+        image: acrtiukk.azurecr.io/pitstop-express-gateway:latest
         ports:
         - containerPort: 8080
+      imagePullSecrets:
+      - name: acr-auth
+
 ---
 apiVersion: v1
 kind: Service

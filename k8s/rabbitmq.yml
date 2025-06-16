@@ -5,144 +5,58 @@ metadata:
   namespace: garage
 data:
   enabled_plugins: |
-    [rabbitmq_peer_discovery_k8s, rabbitmq_management, rabbitmq_prometheus].
-  rabbitmq.conf: |
-    cluster_formation.peer_discovery_backend = k8s
-    cluster_formation.k8s.host = kubernetes.default.svc.cluster.local
-    cluster_formation.k8s.address_type = hostname
-    cluster_formation.k8s.service_name = rabbitmq-service
-    queue_master_locator = min-masters
-    loopback_users = none
+    [rabbitmq_management].
 ---
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: rabbitmq
-  namespace: garage
----
-kind: Role
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: rabbitmq
-  namespace: garage
-rules:
-- apiGroups: [""]
-  resources: ["endpoints"]
-  verbs: ["get"]
-- apiGroups: [""]
-  resources: ["events"]
-  verbs: ["create"]
----
-kind: RoleBinding
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: rabbitmq
-  namespace: garage
-subjects:
-- kind: ServiceAccount
-  name: rabbitmq
-  namespace: garage
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: rabbitmq
----
+# RabbitMQ Deployment
 apiVersion: apps/v1
-kind: StatefulSet
+kind: Deployment
 metadata:
-  name: rabbitmq-statefulset
+  name: rabbitmq-deployment
   namespace: garage
 spec:
+  replicas: 1
   selector:
     matchLabels:
       app: rabbitmq
-  serviceName: rabbitmq-service 
-  volumeClaimTemplates:
-  - metadata:
-      name: rabbitmq-data
-      namespace: garage
-    spec:
-      storageClassName: standard
-      accessModes:
-      - ReadWriteOnce
-      resources:
-        requests:
-          storage: "1Gi"
   template:
     metadata:
-      name: rabbitmq
-      namespace: garage
       labels:
         app: rabbitmq
     spec:
-      initContainers:
-      - name: "rabbitmq-config"
-        image: busybox:1.32.0
+      containers:
+      - name: rabbitmq
+        image: rabbitmq:3.12-management
+        ports:
+        - containerPort: 5672
+        - containerPort: 15672
+        env:
+        - name: RABBITMQ_DEFAULT_USER
+          valueFrom:
+            configMapKeyRef:
+              name: service-config
+              key: MESSAGE_BUS_USERNAME
+        - name: RABBITMQ_DEFAULT_PASS
+          valueFrom:
+            configMapKeyRef:
+              name: service-config
+              key: MESSAGE_BUS_PASSWORD
         volumeMounts:
         - name: rabbitmq-config
-          mountPath: /tmp/rabbitmq
-        - name: rabbitmq-config-rw
-          mountPath: /etc/rabbitmq
-        command:
-        - sh
-        - -c
-        - cp /tmp/rabbitmq/rabbitmq.conf /etc/rabbitmq/rabbitmq.conf && echo '' >> /etc/rabbitmq/rabbitmq.conf;
-          cp /tmp/rabbitmq/enabled_plugins /etc/rabbitmq/enabled_plugins
-        - invoke-rc.d rabbitmq-server start
+          mountPath: /etc/rabbitmq/enabled_plugins
+          subPath: enabled_plugins
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "200m"
       volumes:
       - name: rabbitmq-config
         configMap:
           name: rabbitmq-config
-          optional: false
-          items:
-          - key: enabled_plugins
-            path: "enabled_plugins"
-          - key: rabbitmq.conf
-            path: "rabbitmq.conf"
-      - name: rabbitmq-config-rw
-        emptyDir: {}
-      - name: rabbitmq-data
-        persistentVolumeClaim:
-          claimName: rabbitmq-data
-      serviceAccount: rabbitmq
-      securityContext:
-        fsGroup: 999
-        runAsUser: 999
-        runAsGroup: 999
-      containers:
-      - name: rabbitmq
-        image: rabbitmq:3.8-management
-        volumeMounts:
-        - name: rabbitmq-config-rw
-          mountPath: "/etc/rabbitmq"
-        - name: rabbitmq-data
-          mountPath: "/var/lib/rabbitmq/mnesia"
-        ports:
-        - name: amqp
-          containerPort: 5672
-          protocol: TCP
-        - name: management
-          containerPort: 15672
-          protocol: TCP
-        - name: prometheus
-          containerPort: 15692
-          protocol: TCP
-        - name: epmd
-          containerPort: 4369
-          protocol: TCP
-        livenessProbe:
-          exec:
-            command: ["rabbitmq-diagnostics", "status"]
-          initialDelaySeconds: 60
-          periodSeconds: 60
-          timeoutSeconds: 15
-        readinessProbe:
-          exec:
-            command: ["rabbitmq-diagnostics", "ping"]
-          initialDelaySeconds: 20
-          periodSeconds: 60
-          timeoutSeconds: 10
 ---
+# RabbitMQ Service
 apiVersion: v1
 kind: Service
 metadata:
@@ -152,24 +66,10 @@ spec:
   ports:
   - name: amqp
     port: 5672
-    protocol: TCP
+    targetPort: 5672
   - name: management
     port: 15672
-    protocol: TCP
-  selector:
-    app: rabbitmq
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: rabbitmq-management
-  namespace: garage
-spec:
-  type: NodePort
-  ports:
-  - port: 15672
     targetPort: 15672
-    nodePort: 31672
-    protocol: TCP
   selector:
     app: rabbitmq
+  type: ClusterIP

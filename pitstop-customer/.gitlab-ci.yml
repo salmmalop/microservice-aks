@@ -1,24 +1,26 @@
-include:
-  - local: template.yml
-
-services:
-  - docker:dind
+trigger:
+  branches:
+    include:
+      - main
 
 variables:
-  IMAGE_NAME: $DOCKER_USERNAME/pitstop-customer:latest
+  IMAGE_NAME: 'pitstop-customer'
+  IMAGE_TAG: $(Build.BuildId)
+  ACR_NAME: acrtiukk.azurecr.io
 
-stages:
-  - build
-  - test
+pool:
+  vmImage: 'ubuntu-latest'
 
-build:
-  extends: .build_job_template
+steps:
+- task: DockerInstaller@0
 
-sonarcloud_sast_scan:
-  extends: .sonarcloud_job_template
-
-snyk_dependency_scan:
-  extends: .snyk_dependency_scan_job_template
-
-snyk_container_scan:
-  extends: .snyk_container_scan_job_template
+- task: Docker@2
+  displayName: Build and Push Docker Image
+  inputs:
+    containerRegistry: 'connect'
+    repository: '$(IMAGE_NAME)'
+    command: 'buildAndPush'
+    Dockerfile: 'Dockerfile'
+    buildContext: '.'
+    tags: |
+      $(IMAGE_TAG)

@@ -5,7 +5,7 @@ pool:
   vmImage: 'ubuntu-latest'
 
 variables:
-  resourceGroup: '1-9919a87d-playground-sandbox'
+  resourceGroup: '1-be1134d0-playground-sandbox'
   location: 'southcentralus'
   acrName: '$(acrNameFromOutput)'
   azureServiceConnection: 'connect'

@@ -8,7 +8,7 @@ variables:
   resourceGroup: '1-be1134d0-playground-sandbox'
   location: 'southcentralus'
   acrName: '$(acrNameFromOutput)'
-  azureServiceConnection: 'connect'
+  azureServiceConnection: 'serviceConnection'
 
 stages:
 - stage: PrepareEnvironment
@@ -63,7 +63,7 @@ stages:
             for service in "${services[@]}"
             do
               echo "Building and pushing $service..."
-              docker build -t $(acrLoginServer)/$service:$(Build.BuildId) ./\$service
+              docker build -t $(acrLoginServer)/$service:$(Build.BuildId) "./$service"
               docker tag $(acrLoginServer)/$service:$(Build.BuildId) $(acrLoginServer)/$service:latest
               docker push $(acrLoginServer)/$service:$(Build.BuildId)
               docker push $(acrLoginServer)/$service:latest

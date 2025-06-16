@@ -5,25 +5,17 @@ metadata:
   namespace: garage
 data:
   init.sql: |
-    CREATE DATABASE dev_db;
-    CREATE USER dev_user IDENTIFIED BY 'dev1234567890';
-    GRANT ALL PRIVILEGES ON dev_db.* TO dev_user;
-    CREATE DATABASE test_db;
-    CREATE USER test_user IDENTIFIED BY 'test1234567890';
-    GRANT ALL PRIVILEGES ON test_db.* TO test_user;
-    CREATE DATABASE prod_db;
-    CREATE USER prod_user IDENTIFIED BY 'prod1234567890';
-    GRANT ALL PRIVILEGES ON prod_db.* TO prod_user;
+    CREATE DATABASE IF NOT EXISTS dev_db;
+    CREATE USER IF NOT EXISTS 'dev_user'@'%' IDENTIFIED BY 'dev1234567890';
+    GRANT ALL PRIVILEGES ON dev_db.* TO 'dev_user'@'%';
+    
+    CREATE DATABASE IF NOT EXISTS prod_db;
+    CREATE USER IF NOT EXISTS 'prod_user'@'%' IDENTIFIED BY 'prod1234567890';
+    GRANT ALL PRIVILEGES ON prod_db.* TO 'prod_user'@'%';
+    
+    FLUSH PRIVILEGES;
 ---
-apiVersion: v1
-kind: Secret
-metadata:
-  name: mysql-secret
-  namespace: garage
-type: Opaque
-data:
-  MYSQL_ROOT_PASSWORD: cGFzc3dvcmQ=
----
+# Customer Database StatefulSet
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -40,10 +32,9 @@ spec:
       labels:
         app: customer-database
     spec:
-      terminationGracePeriodSeconds: 10
       containers:
-      - name: customer-database
-        image: mysql:5.7
+      - name: mysql
+        image: mysql:8.0
         ports:
         - containerPort: 3306
         env:
@@ -57,6 +48,13 @@ spec:
           mountPath: /docker-entrypoint-initdb.d
         - name: customer-persistent-storage
           mountPath: /var/lib/mysql
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
       volumes:
       - name: mysql-initdb
         configMap:
@@ -64,26 +62,13 @@ spec:
   volumeClaimTemplates:
   - metadata:
       name: customer-persistent-storage
-      namespace: garage
     spec:
-      accessModes: [ "ReadWriteOnce" ]
+      accessModes: ["ReadWriteOnce"]
       resources:
         requests:
-          storage: 1Gi
+          storage: 5Gi
 ---
-apiVersion: v1
-kind: Service
-metadata:
-  name: customer-database-service
-  namespace: garage
-spec:
-  ports:
-  - port: 3306
-    targetPort: 3306
-    protocol: TCP
-  selector:
-    app: customer-database
----
+# Vehicle Database StatefulSet
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -100,10 +85,9 @@ spec:
       labels:
         app: vehicle-database
     spec:
-      terminationGracePeriodSeconds: 10
       containers:
-      - name: vehicle-database
-        image: mysql:5.7
+      - name: mysql
+        image: mysql:8.0
         ports:
         - containerPort: 3306
         env:
@@ -117,6 +101,13 @@ spec:
           mountPath: /docker-entrypoint-initdb.d
         - name: vehicle-persistent-storage
           mountPath: /var/lib/mysql
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
       volumes:
       - name: mysql-initdb
         configMap:
@@ -124,26 +115,13 @@ spec:
   volumeClaimTemplates:
   - metadata:
       name: vehicle-persistent-storage
-      namespace: garage
     spec:
-      accessModes: [ "ReadWriteOnce" ]
+      accessModes: ["ReadWriteOnce"]
       resources:
         requests:
-          storage: 1Gi
+          storage: 5Gi
 ---
-apiVersion: v1
-kind: Service
-metadata:
-  name: vehicle-database-service
-  namespace: garage
-spec:
-  ports:
-  - port: 3306
-    targetPort: 3306
-    protocol: TCP
-  selector:
-    app: vehicle-database
----
+# Workshop Database StatefulSet
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -160,10 +138,9 @@ spec:
       labels:
         app: workshop-database
     spec:
-      terminationGracePeriodSeconds: 10
       containers:
-      - name: workshop-database
-        image: mysql:5.7
+      - name: mysql
+        image: mysql:8.0
         ports:
         - containerPort: 3306
         env:
@@ -177,6 +154,13 @@ spec:
           mountPath: /docker-entrypoint-initdb.d
         - name: workshop-persistent-storage
           mountPath: /var/lib/mysql
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
       volumes:
       - name: mysql-initdb
         configMap:
@@ -184,12 +168,38 @@ spec:
   volumeClaimTemplates:
   - metadata:
       name: workshop-persistent-storage
-      namespace: garage
     spec:
-      accessModes: [ "ReadWriteOnce" ]
+      accessModes: ["ReadWriteOnce"]
       resources:
         requests:
-          storage: 1Gi
+          storage: 5Gi
+---
+# Database Services
+apiVersion: v1
+kind: Service
+metadata:
+  name: customer-database-service
+  namespace: garage
+spec:
+  ports:
+  - port: 3306
+    targetPort: 3306
+  selector:
+    app: customer-database
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vehicle-database-service
+  namespace: garage
+spec:
+  ports:
+  - port: 3306
+    targetPort: 3306
+  selector:
+    app: vehicle-database
+  type: ClusterIP
 ---
 apiVersion: v1
 kind: Service
@@ -200,6 +210,6 @@ spec:
   ports:
   - port: 3306
     targetPort: 3306
-    protocol: TCP
   selector:
     app: workshop-database
+  type: ClusterIP

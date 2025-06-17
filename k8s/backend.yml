@@ -1,0 +1,127 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: customer-deployment
+  namespace: garage
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: customer
+  template:
+    metadata:
+      labels:
+        app: customer
+    spec:
+      imagePullSecrets:
+        - name: regcred
+      containers:
+        - name: pitstop-customer-service
+          image: acrtiukk.azurecr.io/pitstop-customer:latest
+          ports:
+            - containerPort: 3001
+          envFrom:
+            - configMapRef:
+                name: service-config
+          env:
+            - name: DB_HOST
+              value: customer-database-service
+            - name: PROD_DB_HOSTNAME
+              value: customer-database-service
+            - name: PORT
+              value: "3001"
+            - name: SERVICE_NAME
+              value: PitstopCustomerService
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "200m"
+---
+# Vehicle Service Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vehicle-deployment
+  namespace: garage
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: vehicle
+  template:
+    metadata:
+      labels:
+        app: vehicle
+    spec:
+      imagePullSecrets:
+        - name: regcred
+      containers:
+        - name: pitstop-vehicle-service
+          image: acrtiukk.azurecr.io/pitstop-vehicle:latest
+          ports:
+            - containerPort: 3002
+          envFrom:
+            - configMapRef:
+                name: service-config
+          env:
+            - name: DB_HOST
+              value: vehicle-database-service
+            - name: PROD_DB_HOSTNAME
+              value: vehicle-database-service
+            - name: PORT
+              value: "3002"
+            - name: SERVICE_NAME
+              value: PitstopVehicleService
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "200m"
+---
+# Workshop Service Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: workshop-deployment
+  namespace: garage
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: workshop
+  template:
+    metadata:
+      labels:
+        app: workshop
+    spec:
+      imagePullSecrets:
+        - name: regcred
+      containers:
+        - name: pitstop-workshop-service
+          image: acrtiukk.azurecr.io/pitstop-workshop-planning:latest
+          ports:
+            - containerPort: 3003
+          envFrom:
+            - configMapRef:
+                name: service-config
+          env:
+            - name: DB_HOST
+              value: workshop-database-service
+            - name: PROD_DB_HOSTNAME
+              value: workshop-database-service
+            - name: PORT
+              value: "3003"
+            - name: SERVICE_NAME
+              value: PitstopWorkshopService
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "200m"

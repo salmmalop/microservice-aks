@@ -2,26 +2,27 @@ http:
   port: ${PORT:-8080}
 admin:
   port: 9876
-  host: localhost
+  host: 0.0.0.0  # Changé de localhost à 0.0.0.0 pour Kubernetes
+
 apiEndpoints:
   pitstop-customer:
-    host: localhost
+    host: '*'  # ✅ Accepte toutes les hosts (plus flexible pour K8s)
     paths: '/api/customers/*'
   pitstop-vehicle:
-    host: localhost
+    host: '*'  # ✅ Accepte toutes les hosts
     paths: '/api/vehicles/*'
   pitstop-workshop:
-    host: localhost
+    host: '*'  # ✅ Accepte toutes les hosts
     paths: '/api/workshop/*'
+
 serviceEndpoints:
   pitstop-customer-service:
-    url: ${CUSTOMER_URL:-'http://pitstop-customer-service:3001'}
+    url: ${CUSTOMER_SERVICE_URL:-'http://pitstop-customer-service:3001'}
   pitstop-vehicle-service:
-    url: ${VEHICLE_URL:-'http://pitstop-vehicle-service:3002'}
+    url: ${VEHICLE_SERVICE_URL:-'http://pitstop-vehicle-service:3002'}
   pitstop-workshop-service:
-    url: ${WORKSHOP_URL:-'http://pitstop-workshop-service:3003'}
-    
- 
+    url: ${WORKSHOP_SERVICE_URL:-'http://pitstop-workshop-service:3003'}
+
 policies:
   - basic-auth
   - cors
@@ -31,27 +32,45 @@ policies:
   - oauth2
   - proxy
   - rate-limit
+
 pipelines:
-  customers-pipelines:
+  customers-pipeline:
     apiEndpoints:
       - pitstop-customer
     policies:
+      - cors:
+          - action:
+              origin: '*'
+              methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
+              allowedHeaders: ['Content-Type', 'Authorization']
       - proxy:
           - action:
               serviceEndpoint: pitstop-customer-service
               changeOrigin: true
-  vehicles-pipelines:
+
+  vehicles-pipeline:
     apiEndpoints:
       - pitstop-vehicle
     policies:
+      - cors:
+          - action:
+              origin: '*'
+              methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
+              allowedHeaders: ['Content-Type', 'Authorization']
       - proxy:
           - action:
               serviceEndpoint: pitstop-vehicle-service
               changeOrigin: true
-  workshop-pipelines:
+
+  workshop-pipeline:
     apiEndpoints:
       - pitstop-workshop
     policies:
+      - cors:
+          - action:
+              origin: '*'
+              methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
+              allowedHeaders: ['Content-Type', 'Authorization']
       - proxy:
           - action:
               serviceEndpoint: pitstop-workshop-service

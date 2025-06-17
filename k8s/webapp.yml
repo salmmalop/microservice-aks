@@ -1,4 +1,3 @@
-# WebApp Deployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -21,6 +20,20 @@ spec:
           image: acrtiukk.azurecr.io/pitstop-webapp:latest
           ports:
             - containerPort: 8081
+          env:
+            # Configuration pour communiquer avec la gateway
+            - name: GATEWAY_URL
+              value: "http://gateway-service:8080"
+            # URLs directes vers les services (si nécessaire)
+            - name: CUSTOMER_SERVICE_URL
+              value: "http://pitstop-customer-service:3001"
+            - name: VEHICLE_SERVICE_URL
+              value: "http://pitstop-vehicle-service:3002"
+            - name: WORKSHOP_SERVICE_URL
+              value: "http://pitstop-workshop-service:3003"
+            # Configuration pour le développement
+            - name: NODE_ENV
+              value: "production"
           resources:
             requests:
               memory: "128Mi"

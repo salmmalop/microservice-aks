@@ -2,26 +2,27 @@ http:
   port: ${PORT:-8080}
 admin:
   port: 9876
-  host: 0.0.0.0  # Changé de localhost à 0.0.0.0 pour Kubernetes
+  host: 0.0.0.0
 
 apiEndpoints:
   pitstop-customer:
-    host: '*'  # ✅ Accepte toutes les hosts (plus flexible pour K8s)
+    host: '*'
     paths: '/api/customers/*'
   pitstop-vehicle:
-    host: '*'  # ✅ Accepte toutes les hosts
+    host: '*'
     paths: '/api/vehicles/*'
   pitstop-workshop:
-    host: '*'  # ✅ Accepte toutes les hosts
+    host: '*'
     paths: '/api/workshop/*'
 
 serviceEndpoints:
   pitstop-customer-service:
-    url: ${CUSTOMER_SERVICE_URL:-'http://pitstop-customer-service:3001'}
+    # Utilisez le FQDN complet avec le namespace
+    url: 'http://pitstop-customer-service.default.svc.cluster.local:3001'
   pitstop-vehicle-service:
-    url: ${VEHICLE_SERVICE_URL:-'http://pitstop-vehicle-service:3002'}
+    url: 'http://pitstop-vehicle-service.default.svc.cluster.local:3002'
   pitstop-workshop-service:
-    url: ${WORKSHOP_SERVICE_URL:-'http://pitstop-workshop-service:3003'}
+    url: 'http://pitstop-workshop-service.default.svc.cluster.local:3003'
 
 policies:
   - basic-auth

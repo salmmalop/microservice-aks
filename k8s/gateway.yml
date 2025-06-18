@@ -24,11 +24,11 @@ spec:
           env:
             # URLs des services pour le routage
             - name: CUSTOMER_SERVICE_URL
-              value: "http://pitstop-customer-service:3001"
+               value: "http://pitstop-customer-service.default.svc.cluster.local:3001"
             - name: VEHICLE_SERVICE_URL
-              value: "http://pitstop-vehicle-service:3002"
-            - name: WORKSHOP_SERVICE_URL
-              value: "http://pitstop-workshop-service:3003"
+               value: "http://pitstop-vehicle-service.default.svc.cluster.local:3002"
+             - name: WORKSHOP_SERVICE_URL
+               value: "http://pitstop-workshop-service.default.svc.cluster.local:3003"
             - name: PORT
               value: "8080"
           resources:

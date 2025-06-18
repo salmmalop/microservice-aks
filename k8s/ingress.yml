@@ -4,18 +4,38 @@ metadata:
   name: pitstop-ingress
   namespace: garage
   annotations:
-    kubernetes.io/ingressClassName: "nginx"
-    nginx.ingress.kubernetes.io/add-base-url: "true"
-    nginx.ingress.kubernetes.io/rewrite-target: /
+    appgw.ingress.kubernetes.io/backend-path-prefix: /
+    appgw.ingress.kubernetes.io/probe-path: /actuator/health
 spec:
+  ingressClassName: azure-application-gateway
   rules:
-  - host: pitstop.com
-    http:
+  - http:
       paths:
-      - path: /
+      - path: /gateway/
         pathType: Prefix
         backend:
           service:
-            name: webapp-service
+            name: gateway-service
             port:
-              number: 8081
+              number: 8080
+      - path: /customer/
+        pathType: Prefix
+        backend:
+          service:
+            name: pitstop-customer-service
+            port:
+              number: 3001
+      - path: /vehicle/
+        pathType: Prefix
+        backend:
+          service:
+            name: pitstop-vehicle-service
+            port:
+              number: 3002
+      - path: /workshop/
+        pathType: Prefix
+        backend:
+          service:
+            name: pitstop-workshop-service
+            port:
+              number: 3003

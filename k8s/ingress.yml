@@ -11,13 +11,13 @@ spec:
   rules:
   - http:
       paths:
-      - path: /gateway/
+      - path: /
         pathType: Prefix
         backend:
           service:
-            name: gateway-service
+            name: webapp-service
             port:
-              number: 8080
+              number: 80
       - path: /customer/
         pathType: Prefix
         backend:
